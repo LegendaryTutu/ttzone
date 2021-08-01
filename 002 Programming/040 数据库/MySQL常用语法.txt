@@ -1,0 +1,137 @@
+RDBMS：关系数据库管理系统
+非结构化和半结构化的数据：NoSQL(Not only SQL)
+
+1.MYSQL数据库由服务器端和客户端（C/S）组成。服务器中主要存储数据文件和服务程序。
+
+2.要访问数据库服务器，必须通过客户端。
+SQL：Structural Query Language 结构化的查询语言，以mysql数据库作为载体。
+
+3.客户端可以分为两大类：命令行（自带），可视化工具。
+Mysql的核心是存储引擎，常用的有InnoDB（事务性数据库的首选引擎，支持事务安全表（ACID）），MyISAM（数据仓库，检索速度快）
+
+4.常用SQL语法
+1、	创建数据库：mysql>create database+数据库名;
+删除指定的数据库：mysql>drop database+数据库名;
+打开要操作的数据库：mysql>use+数据库名;
+查看有哪些数据表：mysql>show tables;
+创建数据表(部门表：depid,depname): mysql>creat table department(depid int,depname varchar(100));
+查看数据表的结构：mysql>desc department;
+主键约束：行完整性—要求每行记录不能重复,
+主键能够唯一的标识表中的一条记录。
+创建数据表，首先设计表的结构（有哪些字段/列）：
+员工信息表
+create table employee(
+empid int primary key auto_increment,//auto_increment只有在MYSQL中有，其他数据库中是没有的
+empname varchar(50) not null,//空间长度可变，你需要多少就给你多少
+gender char(1) default ‘m’,
+salary float(9,2),
+dept varchar(20),
+depid int,
+foreign key(depid) references department(depid)
+);
+部门信息表
+create table department(
+depid int primary key,
+depname varchar(50) not null,
+location varchar(100)
+);
+一次性导入多条记录，只需要在values后面跟多个括号，括号之间用逗号连接，最后一个跟分号。括号内依次输入字段对应的值。
+修改表结构：alter table
+将数据表的名称department改为depart：alter table department rename depart;
+为department增加一个新的字段location varchar(200)：alter table department add location varchar(200);
+
+修改已有字段的数据类型：alter table department modify location varchar(100);
+
+修改已有字段的名称和数据类型：alter table department change location address varchar(100);
+
+在数据库中已经存在的数据表的结构上增加表字段：alter table +表名 add +字段及字段的各种属性
+
+在数据库中已经存在的数据表的结构上删除表字段：alter table +表名 drop +字段
+
+删除表的外键约束：alter table+表名 drop foreign key +外键字段
+
+删除/添加表的主键约束：alter table+表名 drop(add) primary key(字段名)
+
+删除数据表就是将数据库中已经存在的表从数据中删除，在删除表的同时，表的定义和表中所有的数据
+均会被删除，删除被其他表关联的主表，分几种情况：
+
+先删除与它关联的子表，再删除父表
+
+如果要保留子表， 则只需将关联的表的外键约束条件取消，然后就可以删除父表
+
+为id=2002的员工分配部门：update employee set deptid=103 where empid=2002;
+将员工2006调动到市场营销部，并且月薪上涨10%：update employee set deptid=103 ,salary=salary*1.1 where empid=2006;
+将所有月薪低于10000的员工薪资上涨10%：update employee set salary=salary*1.1 where salary<10000;
+删除记录：delete from department where deptid=101;
+查看数据表中已有的数据：select * from+表的名称;
+查看基本表结构：desc+表名
+删除表内的所有的数据：delete/truncate table +表名;
+
+delete与truncate删除数据的区别：
+delete进行删除时是逐列进行检查，具有约束的列不能被直接删除，具有数据的安全性及引用的完整性；
+truncate是直接删除整张表然后再进行表的重建；
+
+单表查询
+查看表内满足条件的信息：select * from+表名 where+条件（*表示所有的字段），若只查询某些字段的满足条件的信息，则用：select +字段名 from + 表名 where +条件（字段名之间用逗号连接）
+
+带in关键字的查询：select * from +表名 where + 字段名 in ( , );（括号内为范围，若要查询不再范围内的信息，则用not in，用于离散型数据或者字段）
+
+带between 关键字的查询：select * from +表名 where + 字段名 between+最小值 and +最大值;（用于连续型数据，不包含范围的边界值）
+
+带like的字符匹配查询（模糊查询）（%匹配任意长度的字符，_表示精确的单个字符）：select * from +表名 where + 字段名like+’%条件%’;（%标识有字段）
+select * from +表名 where + 字段名like+’_条件’;（一个_标识一个字符）
+
+在排查过程中，任何值与null进行运算，运算结果都是null.要对其进行比较时，要用is null或者is not null.
+
+多条件查询and: select * from +表名 where +条件 and 条件（！=表示不等于，and表示和，必须满足所有条件）;and的优先级要高于or.
+
+or（表示或者，只要满足一个条件即可）：select * from +表名 where +条件 or 条件
+
+distinct 去重：select distinct+字段名 from + 表名 where +条件(挑出满足条件的值，无重复)
+
+order by排序：select * from +表名 where +表名 order by+条件（默认是升序，要降序的话则在最后加上desc）
+分组查询
+分组统计（group by对数据进行分组，通常和集合函数一起使用）
+select count(*) from +表名 group by +字段名（count(*)是对整行进行统计总数）
+select+字段名,count(*) from +表名 group by +字段名(分组统计，前后两个字段名相同)
+
+分组查询（group_countat()函数将每个分组中各个字段的值显示出来）
+select+字段名,count(*) as +种类 group_countat(字段名) as+名称from +表名 group by +字段名
+分组查询、排序
+select+字段名,count(*) as +种类 group_countat(字段名)  as+名称from +表名 group by +字段名+order by numbers.
+筛选having与group by一起使用，分组查询以后对数据进行筛选，having后加条件。
+在查询最后添加一个统计栏：with rollup
+
+限制查询：limit（只有MYSQL数据库支持limit关键字），显示前几条记录：limit+数字；
+从第m条记录开始，显示n条记录：limit (m-1),n；
+
+case when语句：用于计算条件列表并返回多个可能结果的表达式之一。
+聚合函数
+avg()求平均，max()最大值，min()最小值，sum()求和count（）计数
+sum()在计算时遇到null会自动忽略。
+
+多表连接查询
+内链接查询（inner join）：进行表间某些列数据的比较操作，并列出这些表中与连接条件相匹配的数据行，组合成新的纪录。（select 字段名 from 表一，表二 where 条件——将表一和表二满足条件的列连接起来，并显示某些字段）
+
+内链接查询-自连接：如果在一个连接查询中，涉及到的两个表都是同一个表，这种查询称为自连接查询，自连接是一种特殊的内连接，它是指相互连接的表在物理上为同一张表，但可以在逻辑上分为两张表
+
+外连接查询：有时需要包含没有关联到的行数据，即返回的查询结果集合中不仅包含符合连接条件的行，而且还包括左表、右表、或两个连接表中的所有数据行。left join:左连接返回包括左表中的所有记录和右表中连接字段相等的记录。right join:右连接，返回包括左表中的所有记录和右表中连接字段相等的记录
+注：使用左外连接：左侧的连接表中所有的记录都会显示
+	也可使用右外连接：右侧的连接表中所有的记录都会显示
+复合条件连接查询：复合条件连接查询是在连接查询的过程中，通过添加过滤条件，限制查询的结果，使查询的结果更加准确
+
+子查询：子查询指一个查询语句嵌套在另一个查询语句内部的查询
+
+带any关键字的子查询，这两个关键字是同义词，表示满足其中任一条件，它们允许创建一个表达式对子查询的返回值列表进行比较，只要满足内层子查询中的任何一个比较条件，就返回一个结果作为外层查询的条件。any关键字接在一个比较操作符的后面，表示若与子查询返回的任何值比较为TRUE，则返回TRUE。
+
+带all关键字的子查询：带all关键字与any和some不同，使用all时需要同时满足所有的内层查询的条件。all关键字接在一个比较操作符的后面，表示若与子查询返回的任何值比较为TRUE，则返回TRUE。
+
+带in关键字的子查询：in关键字进行子查询时，内层查询语句仅仅返回一个数据列，这个数据列里的值将提供给外层查询语句进行比较操作。Select语句中可以使用not in关键字，其作用与in正好相反。
+
+带比较运算符的子查询：子查询时可以使用其他的比较运算符，如“<”、“<=”、“=”、“>=”、“！=”等。
+
+合并查询结果：利用union关键字，可以给出多条select语句，并将它们的结果组合成单个结果集。合并时，两个表对应的列数和数据类型必须相同，各个select语句之间使用union或union all关键字分隔。Union不使用关键字all，执行的时候删除重复记录，所有返回的行都是唯一的；使用关键字all的作用是不删除重复行也不对结果进行自动排序。基本语法格式如下：select column… from table1 union[all] select column…from table2
+使用union all包含重复的行，在前面的例子中，分开查询时，两个返回结果中有相同的记录，union从查询结果集中自动去除了重复的行，如果要返回所有匹配的行，而不进行删除，可以使用union all。
+为表/字段取别名：当表/字段的名字很长或执行一些特殊查询是，为了方便操作或者多次使用相同的表/字段时，可以为表/字段指定别名，用这个别名替代原来的表/字段名称，为表/字段取别名的语法格式为：表名/字段名 【as】 表/字段别名。
+
+
